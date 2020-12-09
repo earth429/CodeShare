@@ -1,0 +1,6 @@
+create table codes (
+  id INTEGER primary key,
+  title TEXT,
+  write_time TEXT not null,
+  code TEXT not null
+);

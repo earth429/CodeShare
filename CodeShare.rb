@@ -1,6 +1,9 @@
 require 'sinatra'
 require 'digest/md5'
 require 'active_record'
+require 'securerandom'
+require "cgi/escape"
+require 'pp'
 
 set :environment, :production
 set :sessions,
@@ -31,7 +34,7 @@ def checkpass(trial_username, trial_passwd)
         return false
     end
 
-    # Generate a hashed value
+    # ハッシュ値生成
     if db_algo == "1"
         trial_hashed = Digest::MD5.hexdigest(db_salt + trial_passwd)
     else
@@ -52,7 +55,7 @@ def checkpass(trial_username, trial_passwd)
     puts "hashed passwd = #{trial_hashed}"
     puts ""
 
-    # Success?
+    # ログインに成功したか
     if db_hashed == trial_hashed
         puts "Login Success"
         return true
@@ -114,7 +117,7 @@ post '/auth' do
     username = params[:uname]
     pass = params[:pass]
 
-    if (checkpass(username, pass)) # password check
+    if (checkpass(username, pass)) # パスワードチェック
         session[:login_flag] = true
         session[:username] = username
         redirect '/contentspage'
@@ -167,27 +170,13 @@ end
 post '/new' do
     # 時間の取得
     time = Time.now
-    # 書き込まれた書き込みの一つ前の書き込みのIDを取得
-    id_count = Code.select('id').last
 
-    # 最初の書き込みだったらID:1を付与
-    if id_count != nil
-        id_count = id_count.id
-    else
-        id_count = 1
-    end
-
-    # 書き込み数が1000件超えるとき
-    if id_count != nil and id_count > 999
-        redirect '/error'
-    end
+    # ランダムな hex 文字列をIDに付与
+    id = SecureRandom.hex(10)
 
     # 書き込まれたタイトルとコードを変数に格納
     title = params[:title]
     code = params[:code]
-
-    pp params[:title]
-    pp params[:code]
 
     # 文字数を超えないように制限
     """if title.length >= 200
@@ -196,20 +185,41 @@ post '/new' do
         code = code.slice(0..499)
     end"""
 
+    # サニタイジング
+    title = CGI.escapeHTML(title)
+    code = CGI.escapeHTML(code)
+
     # 改行の対応
     code = code.gsub(/(\r\n|\n|\r)/, '<br>')
     
     c = Code.new
     if title == ""
-        c.title = "Untitled" # もしも名前が書き込まれなかったら
+        c.title = "タイトルなし" # もしも名前が書き込まれなかったら
     else
         c.title = title
     end
     
+    # データベースへ保存
+    c.id = id
+    c.username = session[:username]
     c.write_time = time
     c.code = code
     c.save
-    redirect '/contentspage'
+    redirect '/codepage/' + id
+end
+
+get '/codepage/:id' do
+    if (session[:login_flag] == true)
+        puts 'これがid'
+        puts params[:id]
+        @thiscode = Code.find_by(id: params[:id])
+        #@code = Code.where(username: session[:username])
+        pp @thiscode
+        @username = session[:username]
+        erb :codepage
+    else
+        erb :badrequest
+    end
 end
 
 delete '/del' do

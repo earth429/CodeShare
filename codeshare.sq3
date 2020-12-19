@@ -6,7 +6,8 @@ create table accounts (
 );
 
 create table codes (
-  id INTEGER primary key,
+  id TEXT primary key,
+  username TEXT,
   title TEXT,
   write_time TEXT not null,
   code TEXT not null

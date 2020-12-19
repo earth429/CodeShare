@@ -1,0 +1,41 @@
+<!-- 行番号追加 -->
+<style>
+    .prettyprint ol.linenums > li {
+    list-style-type: decimal; 
+    }
+    pre.prettyprint {
+      font-size:12px;
+      overflow: auto;
+    }
+    pre.prettyprint.high {
+      overflow: auto;
+      height: 23em;
+    }
+</style>
+
+<!--シンタックスハイライトを使う-->
+<script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js?skin=doxy"></script>
+
+<form method="post" action="del">
+    <p>
+    <%= @thiscode.username %>
+    <font color="green"><%= @thiscode.title %></font>
+    <%= @thiscode.write_time %>
+    <input type="submit" value="Delete">
+    <input type="hidden" name="id" value="<%= @thiscode.id %>">
+    <input type="hidden" name="_method" value="delete"><br>
+    </p>
+</form>
+
+<!-- コード表示部 -->
+<pre class="prettyprint linenums"><%= @thiscode.code %></pre>
+
+<script type="text/javascript">
+    var url = location.href;
+    document.write("<p>" + "URL:" + url + "</p>");
+</script>
+
+<a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-text="Code Shareでshareされました"  data-lang="ja">Tweet</a>
+<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script> <br>
+
+<a href="/logout">ログアウトはこちら</a>

@@ -16,34 +16,64 @@
 <!--シンタックスハイライトを使う-->
 <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js?skin=doxy"></script>
 
-<p>共有したユーザー：<%= @thiscode.username %></p>
-<p>タイトル：<font color="green"><%= @thiscode.title %></font></p>
-<p>投稿日時：<%= @thiscode.write_time %></p>
+<!-- ログイン時のみ表示 -->
+<% if (session[:login_flag] == true) %>
+    <input type="button" onclick="location.href='/mypage'" value="マイページ">
+    <input type="button" onclick="location.href='/logout'" value="ログアウト">
+    <!-- 削除は投稿者のみ -->
+    <% if (@thiscode.username == @username) %>
+        <form method="post" action="del" style="display: inline"> <!-- styleで改行しない -->
+          <input type="submit" value="共有したコードの削除">
+          <input type="hidden" name="id" value="<%= @thiscode.id %>">
+          <input type="hidden" name="_method" value="delete">
+        </form>
+    <% end %>
+<% end %>
+
+<!-- コードの情報 -->
+<div style="padding: 10px; margin-bottom: 10px; border: 5px double #333333; border-radius: 10px;">
+  共有したユーザー：<%= @thiscode.username %><br>
+  タイトル：<%= @thiscode.title %><br>
+  共有日時：<%= @thiscode.write_time %><br>
+</div>
 
 <!-- コード表示部 -->
 <pre class="prettyprint linenums"><%= @thiscode.code %></pre>
 
+<h4>本ページのURLを共有すると、共有相手がこのコードを見ることができます</h4>
+
+<!-- コピー対象要素とコピーボタン -->
+本ページのURL:
+<input id="copyTarget" type="text" value="http://127.0.0.1:9998/codepage/<%= @thiscode.id %>" readonly>
+<button onclick="copyToClipboard()">コピーする</button><br>
+
 <script type="text/javascript">
-    var url = location.href;
-    document.write("<p>" + "URL:" + url + "</p>");
+  function copyToClipboard() {
+      // コピー対象をJavaScript上で変数として定義する
+      var copyTarget = document.getElementById("copyTarget");
+
+      // コピー対象のテキストを選択する
+      copyTarget.select();
+
+      // 選択しているテキストをクリップボードにコピーする
+      document.execCommand("Copy");
+
+      // コピーをお知らせする
+      alert("コピーしました:" + copyTarget.value);
+  }
 </script>
 
+<!--script type="text/javascript">
+    var url = location.href;
+    document.write("<p>" + "URL:" + url + "</p>");
+</script-->
+
+<!-- ツイートボタン -->
 <a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-text="Code Shareで共有されました"  data-lang="ja">Tweet</a>
 <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script> <br>
 
+<!-- QRコードの表示 -->
 <p><%= @qr %></p>
-<!--img src="public/qr/<%= @thiscode.id %>.png" alt="QRコード"> <br-->
+(このQRコードを読み込むと本ページにアクセスできます)
 
-<!-- ログイン時のみ表示 -->
-<% if (session[:login_flag] == true) %>
-    <!-- 削除は投稿者のみ -->
-    <% if (@thiscode.username == @username) %>
-        <form method="post" action="del">
-        <input type="submit" value="Delete">
-        <input type="hidden" name="id" value="<%= @thiscode.id %>">
-        <input type="hidden" name="_method" value="delete">
-        </form>
-    <% end %>
-    <a href="/mypage">マイページへ戻る</a>
-    <a href="/logout">ログアウトはこちら</a>
-<% end %>
+<!--img src="public/qr/<%= @thiscode.id %>.png" alt="QRコード"> <br-->

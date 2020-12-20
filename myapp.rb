@@ -172,11 +172,11 @@ post '/new' do
     code = params[:code]
 
     # 文字数を超えないように制限
-    """if title.length >= 200
+    if title.length >= 200
         title = title.slice(0..199)
-    elsif code.length >= 500
-        code = code.slice(0..499)
-    end"""
+    elsif code.length >= 10000
+        code = code.slice(0..9999)
+    end
 
     # サニタイジング
     title = CGI.escapeHTML(title)
@@ -187,7 +187,7 @@ post '/new' do
     
     c = Code.new
     if title == ""
-        c.title = "タイトルなし" # もしも名前が書き込まれなかったら
+        c.title = "タイトルなし" # もしもタイトルが書き込まれなかったら
     else
         c.title = title
     end
@@ -208,10 +208,7 @@ delete '/del' do
 end
 
 get '/codepage/:id' do
-    #puts 'これがid'
-    #puts params[:id]
     @thiscode = Code.find_by(id: params[:id])
-    #pp @thiscode
     @username = session[:username]
 
     pageurl = 'http://127.0.0.1:9998/codepage/' + @thiscode.id

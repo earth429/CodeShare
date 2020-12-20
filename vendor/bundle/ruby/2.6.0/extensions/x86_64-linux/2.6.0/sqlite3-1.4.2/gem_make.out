@@ -1,5 +1,5 @@
 current directory: /home/hideyoshi/CodeShare/vendor/bundle/ruby/2.6.0/gems/sqlite3-1.4.2/ext/sqlite3
-/usr/local/rbenv/versions/2.6.5/bin/ruby -I /usr/local/rbenv/versions/2.6.5/lib/ruby/2.6.0 -r ./siteconf20201209-2115-16jjc9b.rb extconf.rb
+/usr/local/rbenv/versions/2.6.5/bin/ruby -I /usr/local/rbenv/versions/2.6.5/lib/ruby/2.6.0 -r ./siteconf20201220-53317-1us64hn.rb extconf.rb
 checking for sqlite3.h... yes
 checking for pthread_create() in -lpthread... yes
 checking for -ldl... yes
@@ -73,4 +73,4 @@ linking shared-object sqlite3/sqlite3_native.so
 
 current directory: /home/hideyoshi/CodeShare/vendor/bundle/ruby/2.6.0/gems/sqlite3-1.4.2/ext/sqlite3
 make "DESTDIR=" install
-/usr/bin/install -c -m 0755 sqlite3_native.so ./.gem.20201209-2115-1npix72/sqlite3
+/usr/bin/install -c -m 0755 sqlite3_native.so ./.gem.20201220-53317-x9a5o5/sqlite3

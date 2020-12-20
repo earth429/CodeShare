@@ -1,0 +1,57 @@
+<!-- 行番号追加 -->
+<style>
+    .prettyprint ol.linenums > li {
+    list-style-type: decimal; 
+    }
+    pre.prettyprint {
+      font-size:12px;
+      overflow: auto;
+    }
+    pre.prettyprint.high {
+      overflow: auto;
+      height: 23em;
+    }
+</style>
+
+<!--シンタックスハイライトを使う-->
+<script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+
+<h3>ようこそ<%= @username %>さん</h3>
+<a href="/logout">ログアウトはこちら</a> <br>
+<a href="#write">書き込み欄へ</a>
+
+<h4>あなたが共有したコードはこちら</h4>
+<% @mycode.each do |a| %>
+    <form method="post" action="del">
+    <a id="top"></a>
+        <p>
+        <a href="/codepage/<%= a.id %>"><%= a.title %></a>
+        <%= a.write_time %>
+        <input type="submit" value="削除">
+        <input type="hidden" name="id" value="<%= a.id %>">
+        <input type="hidden" name="_method" value="delete"><br>
+        </p>
+    </form>
+<% end %>
+
+<h4>共有されているコードを探すならこちら</h4>
+<!-- Ajaxで探す -->
+<script type="text/javascript" src="search.js"></script>
+<form>
+    キーワード: <input type="text" id="searchword" onKeyUp="doSearch();" maxlength=100>
+</form>
+<div id="result"></div>
+
+<!--移動用のタグ-->
+<a id="write"></a>
+<h4>新たに共有するならこちら</h4>
+<form method="post" action="new">
+    <label for="title">タイトル</label><br>
+    <input type="text" placeholder="200文字以内" name="title" maxlength=200> <br>
+    <label for="code">コード</label><br>
+    <textarea required type="text" name="code" rows="4" cols="60" placeholder="2000文字以内" maxlength=2000></textarea>
+    <p>
+    <input type="submit" value="共有">
+    <input type="reset" value="リセット">
+    </p>
+</form>

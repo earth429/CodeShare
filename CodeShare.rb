@@ -3,7 +3,11 @@ require 'digest/md5'
 require 'active_record'
 require 'securerandom'
 require "cgi/escape"
-require 'pp'
+require 'json'
+require 'rqrcode'
+require 'rqrcode_png'
+#require 'date'
+#require 'pp'
 
 set :environment, :production
 set :sessions,
@@ -41,19 +45,6 @@ def checkpass(trial_username, trial_passwd)
         puts "Unknown algorithm is used for user #{trial_username}"
         return false
     end
-
-    # Display internal variables
-    puts "--- DB ---"
-    puts "username = #{db_username}"
-    puts "salt = #{db_salt}"
-    puts "algorithm = #{db_algo}"
-    puts "hashed passwd = #{db_hashed}"
-    puts ""
-    puts "--- TRIAL ---"
-    puts "username = #{trial_username}"
-    puts "passwd = #{trial_passwd}"
-    puts "hashed passwd = #{trial_hashed}"
-    puts ""
 
     # ログインに成功したか
     if db_hashed == trial_hashed
@@ -120,7 +111,7 @@ post '/auth' do
     if (checkpass(username, pass)) # パスワードチェック
         session[:login_flag] = true
         session[:username] = username
-        redirect '/contentspage'
+        redirect '/mypage'
     else
         session[:login_flag] = false
         redirect '/loginfailure'
@@ -157,11 +148,13 @@ get '/registerfailure' do
     erb :registerfailure
 end
 
-get '/contentspage' do
+# ログイン必要
+# ログイン後、自分が投稿したコードのタイトルが表示される
+get '/mypage' do
     if (session[:login_flag] == true)
-        @c = Code.all
+        @mycode = Code.where(username: session[:username])
         @username = session[:username]
-        erb :index
+        erb :mypage
     else
         erb :badrequest
     end
@@ -208,24 +201,43 @@ post '/new' do
     redirect '/codepage/' + id
 end
 
-get '/codepage/:id' do
-    if (session[:login_flag] == true)
-        puts 'これがid'
-        puts params[:id]
-        @thiscode = Code.find_by(id: params[:id])
-        #@code = Code.where(username: session[:username])
-        pp @thiscode
-        @username = session[:username]
-        erb :codepage
-    else
-        erb :badrequest
-    end
-end
-
 delete '/del' do
     c = Code.find(params[:id])
     c.destroy
-    redirect '/contentspage'
+    redirect '/mypage'
+end
+
+get '/codepage/:id' do
+    #puts 'これがid'
+    #puts params[:id]
+    @thiscode = Code.find_by(id: params[:id])
+    #pp @thiscode
+    @username = session[:username]
+
+    pageurl = 'http://127.0.0.1:9998/codepage/' + @thiscode.id
+    size    = '8'
+    #level   = :h 
+    @qr = RQRCode::QRCode.new(pageurl).as_svg(module_size: 5)
+    #qr = RQRCode::QRCode.new(pageurl, :size => 8, :level => :h );0
+    #png = qr.as_png(
+    #        resize_gte_to: false,
+    #        resize_exactly_to: false,
+    #        fill: 'white',
+    #        color: 'black',
+    #        size: 1000,
+    #        border_modules: 4,
+    #        module_px_size: 10,
+    #        file: nil # path to write
+    #        );0
+    #_path = "./public/qr/" + @thiscode.id + ".png"
+    #File.write(_path, png.to_s, external_encoding: "ASCII-8BIT" ) # エンコードでエラーになるから指定
+    erb :codepage
+end
+
+delete '/codepage/del' do
+    deletecode = Code.find(params[:id])
+    deletecode.destroy
+    redirect '/mypage'
 end
 
 get '/error' do
@@ -235,4 +247,30 @@ end
 get '/logout' do
     session.clear
     erb :logout
+end
+
+get '/search/:val' do
+    key = params[:val]
+    search = Code.where("code LIKE ?", "%#{key}%")
+    len = search.length
+    result = []
+
+    result.push(kensu: "#{len}")
+    if len != 0 && len <= 100
+        search.each do |a|
+            data = {
+                id: "#{a.id}",
+                code: "#{a.code}",
+            }
+            result.push(data)
+        end
+    else
+        data = {
+            username:"none",
+            code:"none",
+        }
+        result.push(data)
+    end
+
+    result.to_json
 end

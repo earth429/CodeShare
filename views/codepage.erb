@@ -1,4 +1,9 @@
-<!-- 行番号追加 -->
+<script type="text/javascript" src="../confirm.js"></script>
+<script type="text/javascript" src="../copy.js"></script>
+<!--シンタックスハイライトを使う-->
+<script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js?skin=doxy"></script>
+
+<!-- 行番号追加・横スクロール対応 -->
 <style>
     .prettyprint ol.linenums > li {
     list-style-type: decimal; 
@@ -13,22 +18,24 @@
     }
 </style>
 
-<!--シンタックスハイライトを使う-->
-<script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js?skin=doxy"></script>
-
 <!-- ログイン時のみ表示 -->
 <% if (session[:login_flag] == true) %>
-    <input type="button" onclick="location.href='/mypage'" value="マイページ">
-    <input type="button" onclick="location.href='/logout'" value="ログアウト">
+    <input type="button" onclick="location.href='/mypage'" value="マイページへ">
     <!-- 削除は投稿者のみ -->
     <% if (@thiscode.username == @username) %>
-        <form method="post" action="del" style="display: inline"> <!-- styleで改行しない -->
-          <input type="submit" value="共有したコードの削除">
+        <form method="post" action="del" onSubmit="return deleteConfirm()" style="display: inline"> <!-- styleで改行しない -->
+          <input type="submit" value="この共有したコードを削除">
           <input type="hidden" name="id" value="<%= @thiscode.id %>">
           <input type="hidden" name="_method" value="delete">
         </form>
     <% end %>
+<% else %>
+    <!-- ログインしていないとき、登録とログインボタン表示 -->
+    CodeShareにログインされていないようです　
+    <input type="button" onclick="location.href='/registerpage'" value="アカウントを作成">
+    <input type="button" onclick="location.href='/login'" value="ログイン">
 <% end %>
+<br><br>
 
 <!-- コードの情報 -->
 <div style="padding: 10px; margin-bottom: 10px; border: 5px double #333333; border-radius: 10px;">
@@ -45,23 +52,8 @@
 <!-- コピー対象要素とコピーボタン -->
 本ページのURL:
 <input id="copyTarget" type="text" value="http://127.0.0.1:9998/codepage/<%= @thiscode.id %>" readonly>
-<button onclick="copyToClipboard()">コピーする</button><br>
-
-<script type="text/javascript">
-  function copyToClipboard() {
-      // コピー対象をJavaScript上で変数として定義する
-      var copyTarget = document.getElementById("copyTarget");
-
-      // コピー対象のテキストを選択する
-      copyTarget.select();
-
-      // 選択しているテキストをクリップボードにコピーする
-      document.execCommand("Copy");
-
-      // コピーをお知らせする
-      alert("コピーしました:" + copyTarget.value);
-  }
-</script>
+<!--button onclick="copyToClipboard()">コピーする</button-->
+<input type="button" onclick="copyToClipboard()" value="コピーする"><br>
 
 <!--script type="text/javascript">
     var url = location.href;

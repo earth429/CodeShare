@@ -1,9 +1,10 @@
-あなたのアカウントを登録します<br>
+<h3 style="text-align:center;">アカウントを作成</h3>
 
-<form action="/register" method="post">
-    ユーザーネーム: <input type="text" name="uname" size"40" maxlength="20"><br>
-    パスワード: <input type="password" name="pass" size="40" maxlength="20"<br>
-    <br>
+<form method="post" action="/register">
+    ユーザーネーム: <input type="text" name="uname" size"40" maxlength="20" required><br>
+    パスワード: <input type="password" name="pass" size="40" maxlength="20"required><br>
     <input type="submit" value="登録">
     <input type="reset" value="リセット">
 </form>
+
+<p style="text-align:center;">もしCodeShareのアカウントを持っている場合は<a href="/login">ログイン<a>から

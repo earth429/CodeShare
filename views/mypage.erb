@@ -1,8 +1,10 @@
-<!-- 行番号追加 -->
+<script type="text/javascript" src="search.js"></script>
+<script type="text/javascript" src="confirm.js"></script>
+<!--シンタックスハイライトを使う-->
+<script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+
+<!-- 横スクロール対応 -->
 <style>
-    .prettyprint ol.linenums > li {
-    list-style-type: decimal; 
-    }
     pre.prettyprint {
       font-size:12px;
       overflow: auto;
@@ -13,13 +15,12 @@
     }
 </style>
 
-<!--シンタックスハイライトを使う-->
-<script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
-
-<!--移動用のタグ-->
+<!--a idは移動用のタグ-->
 <a id="top"></a>
 <h3><%= @username %>さんのマイページ</h3>
-<input type="button" onclick="location.href='/logout'" value="ログアウト">
+<form method="get" action="logout" onSubmit="return logoutConfirm()" style="display: inline">
+    <input type="submit" value="ログアウト">
+</form>
 <input type="button" onclick="location.href='#mycode'" value="マイコードへ">
 <input type="button" onclick="location.href='#search'" value="検索へ">
 <input type="button" onclick="location.href='#write'" value="書き込み欄へ">
@@ -28,33 +29,19 @@
 <h4>あなたが共有したコードはこちら</h4>
 <% @mycode.each do |a| %>
     <div style="padding: 10px; margin-bottom: 10px; border: 5px double #333333; border-radius: 10px;">
-        <form method="post" action="del" onSubmit="return deleteAlert()">
-            タイトル：<a href="/codepage/<%= a.id %>"><%= a.title %></a><br>
-            共有日時：<%= a.write_time %><br>
-            <input type="submit" value="共有したコードの削除">
+        タイトル：<a href="/codepage/<%= a.id %>"><%= a.title %></a><br>
+        共有日時：<%= a.write_time %><br>
+        <form method="post" action="del" onSubmit="return deleteConfirm()">
+            <input type="submit" value="この共有したコードを削除">
             <input type="hidden" name="id" value="<%= a.id %>">
             <input type="hidden" name="_method" value="delete"><br>
         </form>
     </div>
 <% end %>
 
-<script type="text/javascript">
-  function deleteAlert() {
-    // 消していいか確認
-    if(window.confirm("本当に削除してもいいですか？")){
-        window.alert("削除しました");
-        return true;
-    } else {
-        window.alert("削除をキャンセルしました");
-        return false;
-    }
-  }
-</script>
-
 <a id="search"></a>
 <h4>共有されているコードを探すならこちら</h4>
 <!-- Ajaxで探す -->
-<script type="text/javascript" src="search.js"></script>
 <form>
     キーワード: <input type="text" id="searchword" onKeyUp="doSearch();" maxlength=100>
 </form>
@@ -62,13 +49,13 @@
 
 <a id="write"></a>
 <h4>新たに共有するならこちら</h4>
-<form method="post" action="new">
+<form method="post" action="new" onSubmit="return postConfirm()">
     <label for="title">タイトル</label><br>
     <input type="text" placeholder="200文字以内" name="title" maxlength=200> <br>
     <label for="code">コード</label><br>
-    <textarea required type="text" name="code" rows="20" cols="60" placeholder="10000文字以内" maxlength=10000></textarea><br>
+    <textarea type="text" name="code" rows="20" cols="60" placeholder="10000文字以内" maxlength=10000 required></textarea><br>
     <input type="submit" value="共有">
     <input type="reset" value="リセット">
-</form>
+</form><br>
 
 <input type="button" onclick="location.href='#top'" value="トップへ">

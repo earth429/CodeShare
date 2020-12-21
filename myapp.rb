@@ -6,8 +6,7 @@ require "cgi/escape"
 require 'json'
 require 'rqrcode'
 require 'rqrcode_png'
-#require 'date'
-#require 'pp'
+require 'pp'
 
 set :environment, :production
 set :sessions,
@@ -108,6 +107,10 @@ post '/auth' do
     username = params[:uname]
     pass = params[:pass]
 
+    # サニタイジング
+    username = CGI.escapeHTML(username)
+    pass = CGI.escapeHTML(pass)
+
     if (checkpass(username, pass)) # パスワードチェック
         session[:login_flag] = true
         session[:username] = username
@@ -132,6 +135,10 @@ end
 post '/register' do
     username = params[:uname]
     pass = params[:pass]
+
+    # サニタイジング
+    username = CGI.escapeHTML(username)
+    pass = CGI.escapeHTML(pass)
 
     if (registeruser(username, pass)) # 登録に成功するか
         redirect '/registersuccess'
@@ -158,47 +165,61 @@ get '/mypage' do
     else
         erb :badrequest
     end
+
 end
 
 post '/new' do
-    # 時間の取得
-    time = Time.now
+    if (session[:login_flag] == true)
+        # データベースに登録されている全コードの数を取得
+        count = Code.select('*').count
+        #pp "カウント数"
+        #pp count
+        # 書き込み数が1000件超えるとき
+        if count != nil and count > 999
+            redirect '/sharelimit'
+        end
 
-    # ランダムな hex 文字列をIDに付与
-    id = SecureRandom.hex(10)
+        # 時間の取得
+        time = Time.now.strftime("%Y/%m/%d %T") # 20010203 04:05:06 
 
-    # 書き込まれたタイトルとコードを変数に格納
-    title = params[:title]
-    code = params[:code]
+        # ランダムな hex 文字列をIDに付与
+        id = SecureRandom.hex(10)
 
-    # 文字数を超えないように制限
-    if title.length >= 200
-        title = title.slice(0..199)
-    elsif code.length >= 10000
-        code = code.slice(0..9999)
-    end
+        # 書き込まれたタイトルとコードを変数に格納
+        title = params[:title]
+        code = params[:code]
 
-    # サニタイジング
-    title = CGI.escapeHTML(title)
-    code = CGI.escapeHTML(code)
+        # 文字数を超えないように制限
+        if title.length >= 200
+            title = title.slice(0..199)
+        elsif code.length >= 10000
+            code = code.slice(0..9999)
+        end
 
-    # 改行の対応
-    code = code.gsub(/(\r\n|\n|\r)/, '<br>')
-    
-    c = Code.new
-    if title == ""
-        c.title = "タイトルなし" # もしもタイトルが書き込まれなかったら
+        # サニタイジング
+        title = CGI.escapeHTML(title)
+        code = CGI.escapeHTML(code)
+
+        # 改行の対応
+        code = code.gsub(/(\r\n|\n|\r)/, '<br>')
+        
+        c = Code.new
+        if title == ""
+            c.title = "タイトルなし" # もしもタイトルが書き込まれなかったら
+        else
+            c.title = title
+        end
+        
+        # データベースへ保存
+        c.id = id
+        c.username = session[:username]
+        c.write_time = time
+        c.code = code
+        c.save
+        redirect '/codepage/' + id
     else
-        c.title = title
+        erb :badrequest
     end
-    
-    # データベースへ保存
-    c.id = id
-    c.username = session[:username]
-    c.write_time = time
-    c.code = code
-    c.save
-    redirect '/codepage/' + id
 end
 
 delete '/del' do
@@ -211,8 +232,8 @@ get '/codepage/:id' do
     @thiscode = Code.find_by(id: params[:id])
     @username = session[:username]
 
-    pageurl = 'http://127.0.0.1:9998/codepage/' + @thiscode.id
-    size    = '8'
+    pageurl = 'http://127.0.0.1:9998/codepage/' + params[:id]
+    #size    = '8'
     #level   = :h 
     @qr = RQRCode::QRCode.new(pageurl).as_svg(module_size: 5)
     #qr = RQRCode::QRCode.new(pageurl, :size => 8, :level => :h );0
@@ -237,13 +258,13 @@ delete '/codepage/del' do
     redirect '/mypage'
 end
 
-get '/error' do
-    erb :error
+get '/sharelimit' do
+    erb :sharelimit
 end
 
 get '/logout' do
     session.clear
-    erb :logout
+    redirect '/login'
 end
 
 get '/search/:val' do

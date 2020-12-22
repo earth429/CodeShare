@@ -6,11 +6,11 @@ require "cgi/escape"
 require 'json'
 require 'rqrcode'
 require 'rqrcode_png'
-require 'pp'
+#require 'pp'
 
 set :environment, :production
 set :sessions,
-    expire_after: 7200,
+    expire_after: 7200, # 7200秒、2時間
     secret: 'abcdefghij0123456789'
 
 ActiveRecord::Base.configurations = YAML.load_file('database.yml')
@@ -93,11 +93,12 @@ def registeruser(regi_username, regi_passwd)
     end
 end
 
-
+# まずはログイン
 get '/' do
     redirect '/login'
 end
 
+# ログイン
 get '/login' do
     erb :login
 end
@@ -147,10 +148,12 @@ post '/register' do
     end
 end
 
+# 登録に成功
 get '/registersuccess' do
     erb :registersuccess
 end
 
+# 登録に失敗(既に登録済み)
 get '/registerfailure' do
     erb :registerfailure
 end
@@ -168,6 +171,8 @@ get '/mypage' do
 
 end
 
+# ログイン必要
+# 新たに記事を共有する
 post '/new' do
     if (session[:login_flag] == true)
         # データベースに登録されている全コードの数を取得
@@ -222,12 +227,20 @@ post '/new' do
     end
 end
 
+# ログイン必要
+# 自身が共有した記事の削除
 delete '/del' do
-    c = Code.find(params[:id])
-    c.destroy
-    redirect '/mypage'
+    if (session[:login_flag] == true)
+        c = Code.find(params[:id])
+        c.destroy
+        redirect '/mypage'
+    else
+        erb :badrequest
+    end
 end
 
+# ログイン不要(URLを知っていれば誰でもアクセス可能)
+# 実際に共有されたコードページ
 get '/codepage/:id' do
     @thiscode = Code.find_by(id: params[:id])
     @username = session[:username]
@@ -252,43 +265,57 @@ get '/codepage/:id' do
     erb :codepage
 end
 
+# ログイン必要
+# コードページから削除
 delete '/codepage/del' do
-    deletecode = Code.find(params[:id])
-    deletecode.destroy
-    redirect '/mypage'
+    if (session[:login_flag] == true)
+        deletecode = Code.find(params[:id])
+        deletecode.destroy
+        redirect '/mypage'
+    else
+        erb :badrequest
+    end
 end
 
+# 全体の共有数を超えたとき
 get '/sharelimit' do
     erb :sharelimit
 end
 
+# ログアウト処理
 get '/logout' do
     session.clear
     redirect '/login'
 end
 
+# ログイン必要
+# Ajaxでソースコードを検索
 get '/search/:val' do
-    key = params[:val]
-    search = Code.where("code LIKE ?", "%#{key}%")
-    len = search.length
-    result = []
+    if (session[:login_flag] == true)
+        key = params[:val]
+        search = Code.where("code LIKE ?", "%#{key}%")
+        len = search.length
+        result = []
 
-    result.push(kensu: "#{len}")
-    if len != 0 && len <= 100
-        search.each do |a|
+        result.push(kensu: "#{len}")
+        if len != 0 && len <= 100
+            search.each do |a|
+                data = {
+                    id: "#{a.id}",
+                    code: "#{a.code}",
+                }
+                result.push(data)
+            end
+        else
             data = {
-                id: "#{a.id}",
-                code: "#{a.code}",
+                username:"none",
+                code:"none",
             }
             result.push(data)
         end
-    else
-        data = {
-            username:"none",
-            code:"none",
-        }
-        result.push(data)
-    end
 
-    result.to_json
+        result.to_json
+    else
+        erb :badrequest
+    end
 end

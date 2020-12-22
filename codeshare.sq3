@@ -1,8 +1,8 @@
 create table accounts (
-  id char(20) primary key,
-  salt varchar(40) not null,
-  hashed varchar(40) not null,
-  algo char(5) not null
+  id TEXT primary key,
+  salt TEXT not null,
+  hashed TEXT not null,
+  algo TEXT not null
 );
 
 create table codes (
@@ -10,5 +10,6 @@ create table codes (
   username TEXT,
   title TEXT,
   write_time TEXT not null,
-  code TEXT not null
+  code TEXT not null,
+  foreign key (username) references accounts(id)
 );

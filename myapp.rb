@@ -6,7 +6,7 @@ require "cgi/escape"
 require 'json'
 require 'rqrcode'
 require 'rqrcode_png'
-#require 'pp'
+require 'pp'
 
 set :environment, :production
 set :sessions,
@@ -176,11 +176,12 @@ end
 post '/new' do
     if (session[:login_flag] == true)
         # データベースに登録されている全コードの数を取得
+        #while true; do curl -X POST -F "title=curl" -F "code=書き込み数制限テスト curl" 127.0.0.1:9998/new; done
         count = Code.select('*').count
-        #pp "カウント数"
-        #pp count
+        pp "カウント数"
+        pp count
         # 書き込み数が1000件超えるとき
-        if count != nil and count > 999
+        if count != nil and count > 1000
             redirect '/sharelimit'
         end
 
